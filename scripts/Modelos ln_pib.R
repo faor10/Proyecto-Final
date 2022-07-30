@@ -74,8 +74,8 @@ model1 <- train(ln_pib ~ pobl_tot + areaoficialkm2 + discapital + g_cap + finan_
                 trControl = trainControl(method = "cv", number = 5), method = "lm")
 
 model1 
-1.219^2
-##MSE=1.485961
+1.219971^2
+##MSE=1.488329
 
 ##Coeficientes model 1 OLS
 df_coeficientes <- mod1$coefficients %>%
@@ -145,7 +145,7 @@ cv_error_ridge <- cv.glmnet(
 plot(cv_error_ridge)
 paste("Mejor valor de lambda encontrado:", cv_error_ridge$lambda.min)
 paste("Mejor valor de lambda encontrado + 1 desviaci?n est?ndar:", cv_error_ridge$lambda.1se)
-cv_error_ridge ##Lambda min=0.0663, MSE=0.0352 
+cv_error_ridge ##Lambda min=0.06625, MSE=0.03141
 
 modelo2_ridge_lambdamin <- glmnet(
   x           = x_train,
@@ -224,7 +224,7 @@ cv_error_lasso <- cv.glmnet(
   standardize  = TRUE
 )
 
-cv_error_lasso #min Lambda=0.00576, MSE=0.04280 
+cv_error_lasso #min Lambda=0.00576, MSE=0.05169 
 plot(cv_error_lasso)
 paste("Mejor valor de lambda encontrado:", cv_error_lasso$lambda.min)
 paste("Mejor valor de lambda encontrado + 1 desviaci?n est?ndar:", cv_error_lasso$lambda.1se)
@@ -265,10 +265,10 @@ predict_test_lasso
 el <- train(ln_pib ~ pobl_tot + areaoficialkm2 + discapital + g_cap + finan_credito + vrf_peq_productor + lights_mean, data = trainR, method = "glmnet",
             trControl = trainControl("cv", number = 10), preProcess = c("center", "scale"))
 
-el ##The final values used for the model were alpha = 1 and lambda = 0.001325095
-## RMSE= 0.3111667
-0.3111667^2
-##MSE= 0.09682472
+el ##The final values used for the model were alpha =0.55 and lambda = 0.1325095
+## RMSE= 1.237308 
+1.237308 ^2
+##MSE= 1.530931
 
 # Model Prediction en test
 price_predict_el <- predict(el, testR)
@@ -310,12 +310,11 @@ yS <- predict(fitY, newdata = data.frame(XS),onlySL = T)$pred
 Dl1 <- data.frame(XS, yS)
 
 
-#RMSE de todos los modelos realizados en el train, esto nos dice que el de menor MSE
-#es el Ridge
-#OLS MSE=1.485961
-#Ridge Lambda min=0.0663, MSE=0.0352  
-#Lasso Lambda min=0.00576, MSE=0.04280
-#Elastic Net MSE=0.09682472
+#RMSE de todos los modelos realizados en el train, esto nos dice que el de menor MSE es el Ridge
+#OLS MSE=1.488329
+#Ridge Lambda min=0.06625, MSE=0.03141  
+#Lasso Lambda min=0.00762, MSE=0.05169
+#Elastic Net MSE=1.530931
 #Superlearner MSE:0.2609917 
 
 
@@ -326,31 +325,17 @@ predict_test_ridge
 
 # Create a dataframe of all x and predicted SL responses
 predictions_finales <- data.frame(testR, predict_test_ridge)
-predictions_finales<-rename(predictions_finales, ridge_prediction =s0)
+predictions_finales<-rename(predictions_finales, ln_pib_prediccion =s0)
 predictions_finales<-rename(predictions_finales, year =ano)
 testR<-rename(testR, year =ano)
 
 
 #Estadisticas descriptivas del precio predicho
-summary(predictions_finales$ridge_prediccion)
+summary(predictions_finales$ln_pib_prediccion)
 
 
 #Gráfica ln_pib por municipio
-predictions_finales %>% ggplot(aes(x=year, y=ridge_prediccion, group = `municipio`, colour= `municipio`)) geom_line()
 
-chart <- ggplot(predictions_finales, aes(x = year, y = ridge_prediccion, color = municipio)) +
-  xlab("year")+
-  ylab("ln Pib (millones COP)") +
-  theme_minimal(base_size = 14) +
-  ggtitle("Serie de tiempo prediccion Pib municipal") +
-  theme(legend.title=element_blank())
-
-mydef <-chart +
-  geom_line() + 
-  geom_point() +
-  scale_color_brewer(palette = "Set1")
-mydef <- ggplotly(mydef)
-mydef
 
 
 
