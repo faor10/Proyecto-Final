@@ -334,14 +334,33 @@ testR<-rename(testR, year =ano)
 summary(predictions_finales$ln_pib_prediccion)
 
 
-#Gráfica ln_pib por municipio
+#Gráfica ln_pib por depto ya que son miles de municipios
+library(ggplot2)
+install.packages("ggthemes", dependencies = FALSE) # to access theme_hc()
+require("ggthemes")
 
-
+ggplot(data = predictions_finales, mapping = aes(x = year, y = ln_pib_prediccion, color = depto)) + # specify data, x-axis, y-axis and grouping variable
+  geom_line() + # a line per group
+  geom_point() + # points per group
+  theme_hc() +  # a ggtheme, similar to your example
+  labs(title = "Variation of vote shares of right wing populists, 2009 to 2019", # plot title
+       subtitle = "Add a subtitle of your choice", # plot subtitle
+       caption = "Add a caption of your choice") + # plot caption
+  theme(legend.position = "right", # move legend to the right hand side of the plot
+        axis.title.x = element_blank(), # remove x axis title
+        axis.title.y = element_blank(), # remove y axis title
+        legend.title = element_blank(), # remove legend title
+        plot.title = element_text(size = 20, color = "gray40"), # change size and color of plot title
+        plot.subtitle = element_text(color = "gray40"), # change color of subtitle
+        plot.caption = element_text(color = "gray40", hjust = 0)) + # change color of caption and left-align
+  scale_y_continuous(breaks = seq(0, 30, by = 5)) + # specify min, max and break distance for y axis
+  scale_x_continuous(breaks = seq(2009, 2019, by = 5)) + # specify min, max and break distance for x axis
+  expand_limits(y = c(0, 30))
 
 
 #Submission file
 
-submission<-data.frame(testR$municipio,testR$depto,testR$year,predictions_finales$ridge_prediccion)
+submission<-data.frame(testR$municipio,testR$depto,testR$year,predictions_finales$ln_pib_prediccion)
 write.csv(submission,"C:/Users/francisco.alejandro1/Documents/BD/Taller 3/result_pred.csv", row.names = FALSE)
 
 
