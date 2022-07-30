@@ -1,6 +1,6 @@
 rm(list=ls())
 require(pacman)
-p_load(here , tidyverse, haven)
+p_load(here , tidyverse, haven, gtsummary)
 path = here('')
 
 train <- read_dta(here(path,"stores/train.dta"))
@@ -32,3 +32,30 @@ modelo1 <- lm(pib_cons ~ pobl_tot+areaoficialkm2+discapital+g_cap+lights_mean+fi
 summary(modelo1)
 modelo2 <- lm(pib_total ~ pobl_tot+areaoficialkm2+discapital+g_cap+lights_mean+finan_credito+vrf_peq_productor, data = train)
 summary(modelo2)
+
+summary <- train %>% select(pib_cons,pobl_tot,areaoficialkm2,discapital,g_cap,lights_mean,finan_credito,vrf_peq_productor)
+summary %>% tbl_summary(statistic = list(all_continuous() ~ "{mean} ({sd})",
+                                               all_categorical() ~ "{n} / {N} ({p}%)"),
+                        label = list(pib_cons~"PIB Constante", pobl_tot ~ "Población total", 
+                                     areaoficialkm2~"Área oficial km2",discapital~"Distancia a la capital",
+                                     g_cap~"Gastos de capital", g_cap~"Promedio de luminosidad",
+                                     finan_credito~"Crédito interno y externo",vrf_peq_productor~"Valor crédito productores")
+                        
+)
+
+summary <- train %>% select(pib_cons,pobl_tot,areaoficialkm2,discapital,g_cap,lights_mean,finan_credito,vrf_peq_productor)
+summary %>% tbl_summary(statistic = list(all_continuous() ~ "{mean} ({sd})",
+                                         all_categorical() ~ "{n} / {N} ({p}%)"),
+                        label = list(pib_cons~"PIB Constante", pobl_tot ~ "Población total", 
+                                     areaoficialkm2~"Área oficial km2",discapital~"Distancia a la capital",
+                                     g_cap~"Gastos de capital", lights_mean~"Promedio de luminosidad",
+                                     finan_credito~"Crédito interno y externo",vrf_peq_productor~"Valor crédito productores"))
+
+summary <- test %>% select(,pobl_tot,areaoficialkm2,discapital,g_cap,lights_mean,finan_credito,vrf_peq_productor)
+summary %>% tbl_summary(statistic = list(all_continuous() ~ "{mean} ({sd})",
+                                         all_categorical() ~ "{n} / {N} ({p}%)"),
+                        label = list( pobl_tot ~ "Población total", 
+                                     areaoficialkm2~"Área oficial km2",discapital~"Distancia a la capital",
+                                     g_cap~"Gastos de capital", lights_mean~"Promedio de luminosidad",
+                                     finan_credito~"Crédito interno y externo",vrf_peq_productor~"Valor crédito productores"))
+

@@ -17,20 +17,25 @@ use municipios_final, replace
 drop _merge
 merge m:1 codmpio ano using mean_mpio_1992_2021_harmonized
 rename mean_mpio lights_mean
-keep codmpio ano municipio depto lights_mean pobl_tot g_cap finan_credito discapital vrf_peq_productor areaoficialkm2 pib_total pib_cons
+keep codmpio ano municipio depto lights_mean mean_rural mean_urban pobl_tot g_cap finan_credito discapital vrf_peq_productor areaoficialkm2 pib_total pib_cons
 keep if ano>=2005
 drop if codmpio==.
 drop if pobl_tot==.
 save municipios_final, replace 
 
 **Train base de datos
+use municipios_final, replace
 keep if ano>=2005 & ano<2010
 drop if pib_cons==.
+drop if vrf_peq_productor==.
+drop pib_total
 save train, replace 
 
 **Test base de datos
+use municipios_final, replace
 keep if ano>=2010
 drop pib_total pib_cons
 drop if finan_credito==.
 drop if lights_mean==.
+drop if vrf_peq_productor==.
 save test, replace 
