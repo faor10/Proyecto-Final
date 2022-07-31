@@ -23,6 +23,23 @@ drop if codmpio==.
 drop if pobl_tot==.
 save municipios_final, replace 
 
+replace depto="Chocó" if depto=="Choco"
+replace depto="Guainía" if depto=="Guainia"
+replace depto="Atlántico" if depto=="Atlantico"
+replace depto="Bogotá, D.C." if depto=="Bogota Dc"
+replace depto="Bolívar" if depto=="Bolivar"
+replace depto="Boyacá" if depto=="Boyaca"
+replace depto="Guainía" if depto=="Guainia" 
+replace depto="Córdoba" if depto=="Cordoba" 
+replace depto="Nariño" if depto=="Narino" 
+replace depto="Norte de Santander" if depto=="Norte Santander"
+replace depto="Valle del Cauca" if depto=="Valle Cauca"
+replace depto="Vaupés" if depto=="Vaupes"
+replace depto="Caquetá" if depto=="Caqueta"
+
+save municipios_final, replace 
+
+
 **Train base de datos
 use municipios_final, replace
 keep if ano>=2005 & ano<2010
@@ -39,3 +56,18 @@ drop if finan_credito==.
 drop if lights_mean==.
 drop if vrf_peq_productor==.
 save test, replace 
+
+use municipios_final, replace
+collapse (mean) lights_mean, by (depto ano)
+collapse (mean) pib_cons, by (depto ano)
+collapse (sum) pib_cons, by (depto ano)
+
+
+twoway line lights_mean ano, ///
+   by(depto, row(3) title("Dynamics of coverage by year of mandate")) ///
+   lcolor(red pink blue) xsize(12) ysize(8)
+   
+twoway line  lights_mean ano,  by(depto)
+twoway line  pib_cons ano,  by(depto)
+
+twoway line  lights_mean ano 
