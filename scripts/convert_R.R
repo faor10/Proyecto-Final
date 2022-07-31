@@ -1,6 +1,6 @@
 rm(list=ls())
 require(pacman)
-p_load(here , tidyverse, haven, gtsummary)
+p_load(here , tidyverse, haven, gtsummary, caret,ggplot2,dplyr,viridis)
 path = here('')
 
 train <- read_dta(here(path,"stores/train.dta"))
@@ -59,3 +59,20 @@ summary %>% tbl_summary(statistic = list(all_continuous() ~ "{mean} ({sd})",
                                      g_cap~"Gastos de capital", lights_mean~"Promedio de luminosidad",
                                      finan_credito~"Crédito interno y externo",vrf_peq_productor~"Valor crédito productores"))
 
+
+## Plot final
+'%ni%' <- Negate("%in%")
+final2<-subset(final,depto %ni% c('Bogotá, D.C.'))
+
+final2 %>%
+  ggplot( aes(x=year, y=pib_sum, group=depto, color=depto)) +
+  geom_line() +
+  scale_color_viridis(discrete = TRUE) +
+  ggtitle("PIB por Depto") +
+  ylab("PIB")
+
+
+
+dim(training)
+dim(testing)
+dim(evaluation)
