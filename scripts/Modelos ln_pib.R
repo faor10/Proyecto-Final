@@ -59,7 +59,7 @@ cor(trainR$discapital, trainR$lights_mean)
 cor(trainR$discapital, trainR$areaoficialkm2)
 
 #Creamos log del pib
-trainR<- trainR%>% mutate(ln_pib=log(pib_cons))
+train<- train%>% mutate(ln_pib=log(pib_cons))
 
 
 #Modelo 1 Tradicional****************************************
@@ -97,7 +97,7 @@ predicciones_ols<-as.data.frame(predicciones_test_ols)
 
 #Modelo 2 Ridge****************************************
 
-x_train <- model.matrix( ~ pobl_tot + areaoficialkm2 + discapital + g_cap + finan_credito + vrf_peq_productor + lights_mean, data = trainR)[, -1]
+x_train <- model.matrix( ~ pobl_tot + areaoficialkm2 + discapital  + vrf_peq_productor + lights_mean, data = trainR)[, -1]
 y_train <- trainR$ln_pib
 
 #scale(x_train)
@@ -176,7 +176,7 @@ df_coeficientes_ridge %>%
   theme(axis.text.x = element_text(size = 6, angle = 45))
 
 ##Predicciones en test
-x.test <- model.matrix( ~ pobl_tot + areaoficialkm2 + discapital + g_cap + finan_credito + vrf_peq_productor + lights_mean, testR)[, -1]
+x.test <- model.matrix( ~ pobl_tot + areaoficialkm2 + discapital  + vrf_peq_productor + lights_mean, testR)[, -1]
 predict_test_ridge <- predict(modelo2_ridge_lambdamin, newx = x.test)
 predict_test_ridge
 
@@ -328,39 +328,29 @@ predictions_finales <- data.frame(testR, predict_test_ridge)
 predictions_finales<-rename(predictions_finales, ln_pib_prediccion =s0)
 predictions_finales<-rename(predictions_finales, year =ano)
 testR<-rename(testR, year =ano)
+predictions_finales<-predictions_finales%>% mutate(pib=exp(ln_pib_prediccion))
 
+final<-predictions_finales %>%
+  group_by(depto, year) %>%
+  summarize(pib_sum = sum(pib))
 
 #Estadisticas descriptivas del precio predicho
 summary(predictions_finales$ln_pib_prediccion)
+summary(predictions_finales$pib)
 
 
 #Gráfica ln_pib por depto ya que son miles de municipios
 library(ggplot2)
+require(ggplot2)
 install.packages("ggthemes", dependencies = FALSE) # to access theme_hc()
 require("ggthemes")
+library(dplyr)
+require(dplyr)
+library(viridis)
 
-ggplot(data = predictions_finales, mapping = aes(x = year, y = ln_pib_prediccion, color = depto)) + # specify data, x-axis, y-axis and grouping variable
-  geom_line() + # a line per group
-  geom_point() + # points per group
-  theme_hc() +  # a ggtheme, similar to your example
-  labs(title = "Variation of vote shares of right wing populists, 2009 to 2019", # plot title
-       subtitle = "Add a subtitle of your choice", # plot subtitle
-       caption = "Add a caption of your choice") + # plot caption
-  theme(legend.position = "right", # move legend to the right hand side of the plot
-        axis.title.x = element_blank(), # remove x axis title
-        axis.title.y = element_blank(), # remove y axis title
-        legend.title = element_blank(), # remove legend title
-        plot.title = element_text(size = 20, color = "gray40"), # change size and color of plot title
-        plot.subtitle = element_text(color = "gray40"), # change color of subtitle
-        plot.caption = element_text(color = "gray40", hjust = 0)) + # change color of caption and left-align
-  scale_y_continuous(breaks = seq(0, 30, by = 5)) + # specify min, max and break distance for y axis
-  scale_x_continuous(breaks = seq(2009, 2019, by = 5)) + # specify min, max and break distance for x axis
-  expand_limits(y = c(0, 30))
 
 
 #Submission file
 
 submission<-data.frame(testR$municipio,testR$depto,testR$year,predictions_finales$ln_pib_prediccion)
 write.csv(submission,"C:/Users/francisco.alejandro1/Documents/BD/Taller 3/result_pred.csv", row.names = FALSE)
-
-
