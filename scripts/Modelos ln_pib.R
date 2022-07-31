@@ -59,23 +59,23 @@ cor(trainR$discapital, trainR$lights_mean)
 cor(trainR$discapital, trainR$areaoficialkm2)
 
 #Creamos log del pib
-train<- train%>% mutate(ln_pib=log(pib_cons))
+trainR<- trainR%>% mutate(ln_pib=log(pib_cons))
 
 
 #Modelo 1 Tradicional****************************************
 
-mod1 <- lm(ln_pib ~ pobl_tot + areaoficialkm2 + discapital + g_cap + finan_credito + vrf_peq_productor + lights_mean , data = trainR)
+mod1 <- lm(ln_pib ~ pobl_tot + areaoficialkm2 + discapital + vrf_peq_productor + lights_mean , data = trainR)
 summary(mod1)
 
 ##CORREMOS OLS 
-model1 <- train(ln_pib ~ pobl_tot + areaoficialkm2 + discapital + g_cap + finan_credito + vrf_peq_productor + lights_mean,
+model1 <- train(ln_pib ~ pobl_tot + areaoficialkm2 + discapital  + vrf_peq_productor + lights_mean,
                 # model to fit
                 data = trainR,
                 trControl = trainControl(method = "cv", number = 5), method = "lm")
 
 model1 
-1.219971^2
-##MSE=1.488329
+1.229842^2
+##MSE=1.512511
 
 ##Coeficientes model 1 OLS
 df_coeficientes <- mod1$coefficients %>%
@@ -145,7 +145,7 @@ cv_error_ridge <- cv.glmnet(
 plot(cv_error_ridge)
 paste("Mejor valor de lambda encontrado:", cv_error_ridge$lambda.min)
 paste("Mejor valor de lambda encontrado + 1 desviaci?n est?ndar:", cv_error_ridge$lambda.1se)
-cv_error_ridge ##Lambda min=0.06625, MSE=0.03141
+cv_error_ridge ##Lambda min=0.0663, MSE=0.02950 
 
 modelo2_ridge_lambdamin <- glmnet(
   x           = x_train,
@@ -224,7 +224,7 @@ cv_error_lasso <- cv.glmnet(
   standardize  = TRUE
 )
 
-cv_error_lasso #min Lambda=0.00576, MSE=0.05169 
+cv_error_lasso #min Lambda=0.00918 , MSE=0.06012 
 plot(cv_error_lasso)
 paste("Mejor valor de lambda encontrado:", cv_error_lasso$lambda.min)
 paste("Mejor valor de lambda encontrado + 1 desviaci?n est?ndar:", cv_error_lasso$lambda.1se)
@@ -262,13 +262,13 @@ predict_test_lasso
 
 
 #Modelo 4--Elastic Net-----------------------------------------------------------
-el <- train(ln_pib ~ pobl_tot + areaoficialkm2 + discapital + g_cap + finan_credito + vrf_peq_productor + lights_mean, data = trainR, method = "glmnet",
+el <- train(ln_pib ~ pobl_tot + areaoficialkm2 + discapital + vrf_peq_productor + lights_mean, data = trainR, method = "glmnet",
             trControl = trainControl("cv", number = 10), preProcess = c("center", "scale"))
 
-el ##The final values used for the model were alpha =0.55 and lambda = 0.1325095
+el ##The final values used for the model were alpha =1 and lambda = 0.01325095
 ## RMSE= 1.237308 
-1.237308 ^2
-##MSE= 1.530931
+1.232672 ^2
+##MSE= 1.51948
 
 # Model Prediction en test
 price_predict_el <- predict(el, testR)
@@ -279,16 +279,13 @@ require(randomForest)
 require("tidyverse")
 require("ranger")
 require("SuperLearner")
-install.packages("VGAM", dependencies = FALSE)
 require("VGAM")
 # set the seed for reproducibility
 set.seed(123)
-XS <- data.frame(trainR$pobl_tot, trainR$areaoficialkm2, trainR$discapital, trainR$g_cap, trainR$finan_credito, trainR$vrf_peq_productor, trainR$lights_mean)
+XS <- data.frame(trainR$pobl_tot, trainR$areaoficialkm2, trainR$discapital, trainR$vrf_peq_productor, trainR$lights_mean)
 XS<-rename(XS, pobl_tot =trainR.pobl_tot)
 XS<-rename(XS, areaoficialkm2 =trainR.areaoficialkm2)
 XS<-rename(XS, discapital =trainR.discapital)
-XS<-rename(XS, g_cap =trainR.g_cap)
-XS<-rename(XS, finan_credito =trainR.finan_credito)
 XS<-rename(XS, vrf_peq_productor =trainR.vrf_peq_productor)
 XS<-rename(XS, lights_mean =trainR.lights_mean)
 
@@ -302,7 +299,7 @@ fitY <- SuperLearner(Y = YS, X = XS,
                      method = "method.NNLS", SL.library = c("SL.mean","SL.lm", "SL.ranger", "SL.glmnet"),
                      cvControl = list(V = folds))
 
-fitY ## Nos dice que el mejor modelo es ranger_All:0.2609917
+fitY ## Nos dice que el mejor modelo es ranger_All:0.1458048
 
 # Now predict the outcome for all possible x
 yS <- predict(fitY, newdata = data.frame(XS),onlySL = T)$pred
@@ -311,46 +308,54 @@ Dl1 <- data.frame(XS, yS)
 
 
 #RMSE de todos los modelos realizados en el train, esto nos dice que el de menor MSE es el Ridge
-#OLS MSE=1.488329
-#Ridge Lambda min=0.06625, MSE=0.03141  
-#Lasso Lambda min=0.00762, MSE=0.05169
-#Elastic Net MSE=1.530931
-#Superlearner MSE:0.2609917 
+#OLS MSE=1.512511
+#Ridge: Lambda min=0.0663, MSE=0.02950 
+#Lasso: Lambda min=0.00918 , MSE=0.06012
+#Elastic Net MSE=1.51948, alpha =1 and lambda = 0.01325095
+#Superlearner MSE:0.1458048 
 
 
 ##Predicciones en test
-x.test <- model.matrix( ~ pobl_tot + areaoficialkm2 + discapital + g_cap + finan_credito + vrf_peq_productor + lights_mean, testR)[, -1]
+x.test <- model.matrix( ~ pobl_tot + areaoficialkm2 + discapital +  vrf_peq_productor + lights_mean, testR)[, -1]
 predict_test_ridge <- predict(modelo2_ridge_lambdamin, newx = x.test)
 predict_test_ridge
 
 # Create a dataframe of all x and predicted SL responses
 predictions_finales <- data.frame(testR, predict_test_ridge)
-predictions_finales<-rename(predictions_finales, ln_pib_prediccion =s0)
+predictions_finales<-rename(predictions_finales, pib_prediction =s0)
 predictions_finales<-rename(predictions_finales, year =ano)
 testR<-rename(testR, year =ano)
-predictions_finales<-predictions_finales%>% mutate(pib=exp(ln_pib_prediccion))
+predictions_finales<-predictions_finales%>% mutate(pib=exp(pib_prediction))
 
 final<-predictions_finales %>%
   group_by(depto, year) %>%
   summarize(pib_sum = sum(pib))
 
-#Estadisticas descriptivas del precio predicho
-summary(predictions_finales$ln_pib_prediccion)
-summary(predictions_finales$pib)
+saveRDS(final,"C:/Users/francisco.alejandro1/Documents/BD/Proyecto Final/Proyecto-Final/stores/final.rds")
 
+#Estadisticas descriptivas del pib predicho
+summary(predictions_finales$pib)
 
 #Gráfica ln_pib por depto ya que son miles de municipios
 library(ggplot2)
 require(ggplot2)
-install.packages("ggthemes", dependencies = FALSE) # to access theme_hc()
 require("ggthemes")
 library(dplyr)
 require(dplyr)
 library(viridis)
+## Plot final
 
+'%ni%' <- Negate("%in%")
+final2<-subset(final,depto %ni% c('Bogotá, D.C.'))
 
+final2 %>%
+  ggplot( aes(x=year, y=pib_sum, group=depto, color=depto)) +
+  geom_line() +
+  scale_color_viridis(discrete = TRUE) +
+  ggtitle("PIB por Depto") +
+  ylab("PIB")
 
-#Submission file
+##Submission template
+submission<-data.frame(testR$municipio,testR$depto,testR$year,predictions_finales$pib)
+write.csv(submission,"C:/Users/francisco.alejandro1/Documents/BD/Proyecto Final/Proyecto-Final/documents/result_pred.csv", row.names = FALSE)
 
-submission<-data.frame(testR$municipio,testR$depto,testR$year,predictions_finales$ln_pib_prediccion)
-write.csv(submission,"C:/Users/francisco.alejandro1/Documents/BD/Taller 3/result_pred.csv", row.names = FALSE)
