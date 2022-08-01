@@ -1,3 +1,6 @@
+##En este script se realiza la transformación de los datos de Stata .dta a .Rds, así mismo se generan
+##las estadisiticas descriptivas de las variables
+
 rm(list=ls())
 require(pacman)
 p_load(here , tidyverse, haven, gtsummary, caret,ggplot2,dplyr,viridis)

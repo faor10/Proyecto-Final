@@ -1,3 +1,4 @@
+##Se presentan los modelos, las pruebas y la generación de las predicciones para estimar el PIB municipal
 ## Limpiamos
 rm(list=ls())
 

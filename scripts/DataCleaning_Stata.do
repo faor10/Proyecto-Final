@@ -1,3 +1,9 @@
+/*
+Proyecto Final
+Realizado por: Carlos Avilán y Francisco Ortiz
+Se presenta el tratamiento y limpieza de los datos utilizados
+*/
+
 *Unión de bases de datos
 clear all
 cd "D:\OneDrive - Universidad de los Andes\Intersemestral 2\Big Data\Trabajo Final\GitHub\Proyecto-Final\stores"
@@ -40,7 +46,7 @@ replace depto="Caquetá" if depto=="Caqueta"
 save municipios_final, replace 
 
 
-**Train base de datos
+**Generación Train base de datos
 use municipios_final, replace
 keep if ano>=2005 & ano<2010
 drop if pib_cons==.
@@ -48,7 +54,7 @@ drop if vrf_peq_productor==.
 drop pib_total
 save train, replace 
 
-**Test base de datos
+**Generació Test base de datos
 use municipios_final, replace
 keep if ano>=2010
 drop pib_total pib_cons
@@ -58,6 +64,9 @@ drop if vrf_peq_productor==.
 save test, replace 
 
 use municipios_final, replace
+
+*Generación de gráficas para análisis
+
 collapse (mean) lights_mean, by (depto ano)
 collapse (mean) pib_cons, by (depto ano)
 collapse (sum) pib_cons, by (depto ano)
